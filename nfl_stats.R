@@ -70,9 +70,11 @@ players_team_rec_df %>% group_by(team_id, team_name) %>% count() %>% filter(n >=
 check <- players_team_rec_df %>% filter(!is.na(receiving_yards)) %>% group_by(team_id, team_name, season) %>% count()
 #' team with fewest receivers with stats included is the 2019 Rams, so not necessarily just low individual contrib that bring these down due to missing data.
 
-#' keep necessary columns and only players with at least 3 seasons of data
+#' keep necessary columns and only players with at least 3 seasons of data + keep offensive players only
 rec_players <- players_team_rec_df %>% 
   inner_join(filter(check_seasons,n >= 3), by = "player_id") %>% 
+  # remove players without offensive plays, "point kickers" for faked kicks I'm assuming. Leave only WR, RB, TE. 
+  filter(total_offensive_plays > 0, !is.na(total_offensive_plays), !is.na(yards_per_reception), position != "PK") %>% 
   select(1:6,15,17,30,34,35) 
   
 rec_data <- rec_players %>% 
@@ -88,8 +90,8 @@ games_plays$predict_rec_yards <- predict(fit, games_plays)
 games_plays_check <- inner_join(games_plays, rec_data)
 
 #' [notes]
-#' predict() as is, way off--in particular for those who played 0 offensive plays but 16 games
-#' DUH, these would be defensive players... remove. 
+#' Still pretty awful prediction with simple equation for wildly unpredictible stats...
+#' explore tidymodels and/or ML methods.
 #' 
 
 
