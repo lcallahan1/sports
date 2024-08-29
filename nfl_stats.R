@@ -73,19 +73,27 @@ check <- players_team_rec_df %>% filter(!is.na(receiving_yards)) %>% group_by(te
 #' keep necessary columns and only players with at least 3 seasons of data
 rec_players <- players_team_rec_df %>% 
   inner_join(filter(check_seasons,n >= 3), by = "player_id") %>% 
-  select(1:6,15,30,34,35) 
+  select(1:6,15,17,30,34,35) 
   
 rec_data <- rec_players %>% 
-  select(receiving_yards_after_catch, team_games_played, total_offensive_plays) 
+  select(player_id, team_id, season, receiving_yards_after_catch, team_games_played, total_offensive_plays) 
 
 fit <- lm(receiving_yards_after_catch ~ team_games_played + total_offensive_plays, data=rec_data)
 summary(fit)
 
-games_plays <- rec_data %>% select(team_games_played, total_offensive_plays)
+games_plays <- rec_data %>% select(-receiving_yards_after_catch)
 
-predict(fit, games_plays)
+games_plays$predict_rec_yards <- predict(fit, games_plays)
 
-#' TODO continue... 
+games_plays_check <- inner_join(games_plays, rec_data)
+
+#' [notes]
+#' predict() as is, way off--in particular for those who played 0 offensive plays but 16 games
+#' DUH, these would be defensive players... remove. 
+#' 
+
+
+
 
 
 #' prepare dataset for team stats compared season over season
